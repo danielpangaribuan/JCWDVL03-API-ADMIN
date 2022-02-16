@@ -1,0 +1,26 @@
+{
+  "name": "jcwdvl03-api-admin",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "start": "node .",
+    "dev": "nodemon ."
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/danielpangaribuan/JCWDVL03-API-ADMIN.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/danielpangaribuan/JCWDVL03-API-ADMIN/issues"
+  },
+  "homepage": "https://github.com/danielpangaribuan/JCWDVL03-API-ADMIN#readme",
+  "dependencies": {
+    "cors": "^2.8.5",
+    "dotenv": "^16.0.0",
+    "express": "^4.17.2",
+    "mysql2": "^2.3.3"
+  }
+}
