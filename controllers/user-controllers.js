@@ -1,15 +1,37 @@
 const utils = require('../utils');
 const db = require('../database').promise();
 
+const getPagination = (page, size) => {
+    const limit = size ? +size : 2;
+    const offset = page ? (page - 1) * limit : 0;
+    return { limit, offset }
+}
+
+const getPagingData = (data, page, limit) => {
+    const { count: totalItems, rows: tutorials } = data;
+    const currentPage = page ? +page : 0;
+    const totalPages = Math.ceil(totalItems / limit);
+    return { totalItems, tutorials, totalPages, currentPage };
+}
+
 const getAllUserData = async (req, res) => {
     try {
-        const GET_USERS = `SELECT * FROM user LIMIT 5 OFFSET 0;`;
+        const { page, size } = req.query;
+        const { limit, offset } = getPagination(page, size);
+
+        const GET_USERS = `SELECT * FROM user LIMIT ${limit} OFFSET ${offset};`;
+        const TOTAL_DATA = `SELECT * From user`;
+
+        const [ total_data ] = await db.execute(TOTAL_DATA);
         const [ users ] = await db.execute(GET_USERS);
+        const totalItems = total_data.length;
+
+        const data = { 'rows': users, 'currentPage': parseInt(page), 'totalPage': Math.ceil(totalItems / limit), 'length' : totalItems,  };
         
         res.status(200).send(new utils.CreateRespond(
             200,
             'success',
-            users
+            data
         ));
     } catch (error) {
         console.log(error);
