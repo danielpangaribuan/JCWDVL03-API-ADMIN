@@ -24,7 +24,9 @@ database.connect((error) => {
 
 const routes = require('./routes')
 app.use(routes.home_route)
-app.use('/api', routes.user_routes)
+app.use(routes.user_routes)
+app.use(routes.transaction_routes)
+app.use(routes.combo_routes)
 
 const PORT = process.env.PORT || 2000
 app.listen(PORT, () => console.log(`Server is running at port : ${PORT}`));

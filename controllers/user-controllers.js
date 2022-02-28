@@ -16,11 +16,11 @@ const getPagingData = (data, page, limit) => {
 
 const getAllUserData = async (req, res) => {
     try {
-        const { page, size } = req.query;
+        const { page, size, role } = req.query;
         const { limit, offset } = getPagination(page, size);
 
-        const GET_USERS = `SELECT * FROM user LIMIT ${limit} OFFSET ${offset};`;
-        const TOTAL_DATA = `SELECT * From user`;
+        const GET_USERS = `SELECT * FROM user WHERE user.role_id = ${role} LIMIT ${limit} OFFSET ${offset};`;
+        const TOTAL_DATA = `SELECT * FROM user WHERE user.role_id = ${role}`;
 
         const [ total_data ] = await db.execute(TOTAL_DATA);
         const [ users ] = await db.execute(GET_USERS);
@@ -33,6 +33,20 @@ const getAllUserData = async (req, res) => {
             'success',
             data
         ));
+    } catch (error) {
+        console.log(error);
+        res.status(500).send('Internal service error');
+    }
+}
+
+const getDetailUser = async (req, res) => {
+    try {
+        const GET_DETAIL = `SELECT u.nama_lengkap, u.email, u.username,
+                                    u.jenis_kelamin, u.tanggal_lahir, u.status_verified,
+                                    ua.alamat_penerima, ua.nama_penerima, ua.nama_provinsi, 
+                                    ua.nama_kota, ua.kodepos, ua.nomor_hp
+                                FROM user_alamat AS ua, user AS u
+                                WHERE u.id = ua.id_user;`
     } catch (error) {
         console.log(error);
         res.status(500).send('Internal service error');
