@@ -6,7 +6,6 @@ const getComboStatusTransaction = async (req, res) => {
         const GET_STATUS = `SELECT * FROM transaction_status;`;
         const [ status ] = await db.execute(GET_STATUS);
         const data = status;
-        console.log(data)
 
         res.status(200).send(new utils.CreateRespond(
             200,

@@ -4,26 +4,35 @@ const moment = require('moment-timezone');
 
 const getTransactionData = async (req, res) => {
     try {
-        const GET_TRANSACTION = `SELECT t.id, t.invoice_number, t.total_price, ts.status AS status_type, ts.id AS status_code, t.date_transfer, u.fullname, tq.total_quantity
-                                FROM transaction AS t, transaction_status AS ts, cart AS c, user AS u, 
+        const { id_transacion, created_from, created_end, fullname, status } = req.query;
+        const GET_TRANSACTION = `SELECT 
+                                    t.id, t.invoice_number, t.total_price, ts.status AS status_type, 
+                                    ts.id AS status_code, t.date_transfer, u.fullname, tq.total_quantity
+                                FROM 
+                                    transaction AS t, transaction_status AS ts, 
+                                    cart AS c, user AS u, 
                                     (
                                         SELECT cart_id, SUM(quantity) AS total_quantity 
                                         FROM cart_detail 
                                         GROUP BY cart_id
                                     ) AS tq
-                                WHERE t.cart_id = c.id AND c.user_id = u.id AND t.status_id = ts.id AND t.cart_id = tq.cart_id ;`;
-
+                                WHERE 
+                                    t.cart_id = c.id AND c.user_id = u.id AND 
+                                    t.status_id = ts.id AND t.cart_id = tq.cart_id AND 
+                                    t.invoice_number = IFNULL(${id_transacion ? `'${id_transacion}'` : null}, t.invoice_number) AND
+                                    t.created_at BETWEEN IFNULL(${created_from ? `'${created_from}'` : null}, t.created_at) AND IFNULL(${created_end ? `'${created_end}'` : null}, t.created_at) AND
+                                    u.fullname LIKE IFNULL(${fullname ? `'%${fullname}%'` : null}, u.fullname) AND
+                                    ts.id = IFNULL(${status ? status : null}, ts.id);`;
         const [ transaction ] = await db.execute(GET_TRANSACTION);
         const data = transaction;
-
+        
         res.status(200).send(new utils.CreateRespond(
             200,
             'success',
             data
         ))
     } catch (error) {
-        const err = err.code ? error : new utils.CreateError();
-        res.status(err.code).send(err);
+        console.log(error)
     }
 }
 
@@ -75,7 +84,7 @@ const getDetailTransaction = async (req, res) => {
             data
         ));
     } catch (error) {
-        const err = err.code ? error : new utils.CreateError();
+        const err = error.code ? error : new utils.CreateError();
         res.status(err.code).send(err);
     }
 }
