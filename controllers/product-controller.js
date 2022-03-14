@@ -79,71 +79,47 @@ const getAllProducts = async (req, res) => {
 }}*/
 
 const addNewProduct = async (req, res) => {
-    const { name, price, description } = req.body
+    const { product_name, category_id, weight, description, price } = req.body
 
     try {
-        // do query insert to products table
-        const ADD_PRODUCT = `INSERT INTO product (name, price, description) VALUES(?, ?);`
-        const [ NEW_PRODUCT ] = await database.execute(ADD_PRODUCT, [name, price, description ])
+        const ADD_PRODUCT = `INSERT INTO product (product_name, category_id, weight, description, price) VALUES(?, ?, ?, ?, ?)`
+        const [ NEW_PRODUCT ] = await database.execute(ADD_PRODUCT, [product_name, category_id, weight, description, price])
 
-        // check category parent_id
-       {/*const CTE = `WITH RECURSIVE category_path (id, category, parent_id)
-        AS (
-            SELECT id, category, parent_id
-            FROM category
-            WHERE id = ?
-            
-            UNION ALL
-            
-            SELECT c.id, c.category, c.parent_id
-            FROM category_path AS cp
-            JOIN category AS c
-            ON cp.parent_id = c.id
-        )
-        SELECT id FROM category_path;`*/}
-        // const [ PARENT_ID ] = await database.execute(CTE, [category_id])
-
-        // do query insert to product_category table
-        // const BULK_VALUE = PARENT_ID.map(value => `(${NEW_PRODUCT.insertId}, ${value.id})`)
-        // const ADD_CATEGORY = `INSERT INTO product_category (product_id, category_id) VALUES ${BULK_VALUE};`
-        // const [ INFO ] = await database.execute(ADD_CATEGORY)
-
-        // send respond to client-side
         res.status(200).send(new utils.CreateRespond(
             200,
-            'insert product success',
+            `insert product succes`,
             NEW_PRODUCT
         ))
-
     } catch (error) {
-        console.log(error)
-        res.status(500).send({ error })
+            console.log(error)
+            res.status(500).send({ error })
     }
 }
+
 
 const deleteProduct = async (req, res) => {
     const id = Number(req.params.id)
     try {
         // search product with id
-        const GET_PRODUCT = `SELECT id FROM products WHERE id = ?;`
+        const GET_PRODUCT = `SELECT id FROM product WHERE id = ?;`
         const [ PRODUCT ] = await database.execute(GET_PRODUCT, [id])
 
         // check
         if (!PRODUCT.length) throw ({ message : 'data not found'})
 
         // do query delete to products table
-        const DELETE_PRODUCT = `DELETE FROM products WHERE id = ?;`
-        const [ INFO1 ] = await database.execute(DELETE_PRODUCT, [id])
+        const DELETE_PRODUCT = `DELETE FROM product WHERE id = ?;`
+        const [ INFO ] = await database.execute(DELETE_PRODUCT, [id])
 
         // do query delete to product_category table
-        const DELETE_CATEGORY = `DELETE FROM product_category WHERE product_id = ?;`
-        const [ INFO2 ] = await database.execute(DELETE_CATEGORY, [id])
+        //const DELETE_CATEGORY = `DELETE FROM product_category WHERE product_id = ?;`
+        //const [ INFO2 ] = await database.execute(DELETE_CATEGORY, [id])
 
         // send respond to client-side
         res.status(200).send(new utils.CreateRespond(
             200, 
             `products with id : ${id} has been deleted`,
-            INFO2
+            INFO
         ))
     } catch (error) {
         console.log(error)
@@ -155,7 +131,7 @@ const updateProducts = async (req, res) => {
     const id = Number(req.params.id)
     try {
         // check if data is exist
-        const GET_PRODUCT = `SELECT id FROM products WHERE id = ?;`
+        const GET_PRODUCT = `SELECT id FROM product WHERE id = ?;`
         const [ PRODUCTS ] = await database.execute(GET_PRODUCT, [id])
 
         if (!PRODUCTS.length) throw ({ message : 'data not found' })
@@ -166,7 +142,7 @@ const updateProducts = async (req, res) => {
             set.push(`${key} = ?`)
         }
         console.log(set)
-        const UPDATE_PRODUCTS = `UPDATE products SET ${set} WHERE id = ?;`
+        const UPDATE_PRODUCTS = `UPDATE product SET ${set} WHERE id = ?;`
         console.log(UPDATE_PRODUCTS)
         const [ INFO ] = await database.execute(UPDATE_PRODUCTS, [...Object.values(req.body), id ])
 
