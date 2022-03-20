@@ -22,7 +22,8 @@ const getTransactionData = async (req, res) => {
                                     t.invoice_number = IFNULL(${id_transacion ? `'${id_transacion}'` : null}, t.invoice_number) AND
                                     t.created_at BETWEEN IFNULL(${created_from ? `'${created_from}'` : null}, t.created_at) AND IFNULL(${created_end ? `'${created_end}'` : null}, t.created_at) AND
                                     u.fullname LIKE IFNULL(${fullname ? `'%${fullname}%'` : null}, u.fullname) AND
-                                    ts.id = IFNULL(${status ? status : null}, ts.id);`;
+                                    ts.id = IFNULL(${status ? status : null}, ts.id)
+                                ORDER BY t.created_at DESC;`;
         const [ transaction ] = await db.execute(GET_TRANSACTION);
         const data = transaction;
         
@@ -95,7 +96,21 @@ const updateStatusTransaction = async (req, res) => {
     const updated_at = moment().tz("Asia/Jakarta").format('YYYY-MM-DD HH:mm:ss')
     try {
         const UPDATE_STATUS_TRANSACTION = `UPDATE transaction SET status_id = ${status_id}, updated_at = '${updated_at}' WHERE id = ${id};`;
-        const UPDATED_STATUS_TRANSACTION = await db.execute(UPDATE_STATUS_TRANSACTION, [status_id]);
+        const [UPDATED_STATUS_TRANSACTION] = await db.execute(UPDATE_STATUS_TRANSACTION, [status_id]);
+
+        // console.log(status_id)
+        if (status_id == 10) {
+            const TRANSACTION_DETAIL = `SELECT * FROM transaction_detail WHERE transaction_id = ${id};`;
+            const [ transaction_detail ] = await db.execute(TRANSACTION_DETAIL);
+            // console.log(transaction_detail)
+
+            await Promise.all(transaction_detail.map(async obj => {
+                console.log(obj)
+                const UPDATE_QUANTITY = `UPDATE inventory SET quantity = quantity + ${parseInt(obj.quantity)} WHERE (warehouse_id = ${obj.warehouse_id} AND product_id = ${obj.product_id});`
+                const [updated_quantity] = await db.execute(UPDATE_QUANTITY);
+                // console.log(obj)
+            }));
+        }
 
         res.status(200).send(new utils.CreateRespond(
             200,

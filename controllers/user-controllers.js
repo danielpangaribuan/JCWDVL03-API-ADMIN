@@ -83,7 +83,34 @@ const deleteUserDataById = async (req, res) => {
     }
 }
 
+const updateStatusUser = async (req, res) => {
+    const id = Number(req.params.id);
+    try {
+        const GET_USER_BY_ID = `SELECT * FROM user WHERE id = ${id};`;
+        const [ user ] = await db.execute(GET_USER_BY_ID);
+
+        if (!user.length) throw new utils.CreateError(
+            'Bad Request',
+            401,
+            `${req.method} : ${req.url}`,
+            `User with id : ${id} doesn't found.`
+        )
+
+        const EDIT_STATUS_USER = `UPDATE user SET verified_status = 1 WHERE id = ${id};`;
+        const EDIT_USER = await db.execute(EDIT_STATUS_USER);
+
+        res.status(200).send(new utils.CreateRespond(
+            200,
+            `User with id: ${id} has been updated`,
+            {}
+        ));
+    } catch (error) {
+        console.log(error)
+    }
+}
+
 module.exports = {
     getAllUserData,
-    deleteUserDataById
+    deleteUserDataById,
+    updateStatusUser
 }
