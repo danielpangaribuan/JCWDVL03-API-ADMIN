@@ -4,6 +4,7 @@ const cors = require('cors')
 const dotenv = require('dotenv')
 dotenv.config()
 const database = require('./database')
+var path = require('path');
 
 const { UrlLogger } = require('./utils')
 
@@ -29,6 +30,7 @@ app.use(routes.transaction_routes)
 app.use(routes.combo_routes)
 app.use(routes.report_routes)
 app.use(routes.product_routes)
+app.use(express.static(path.resolve('./public')));
 
 const PORT = 4000 //process.env.PORT || 2000
 app.listen(PORT, () => console.log(`Server is running at port : ${PORT}`));

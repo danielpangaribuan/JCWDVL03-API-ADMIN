@@ -41,8 +41,9 @@ const getDetailTransaction = async (req, res) => {
     try {
         const ID_TRANSACTION = req.params.id;
         const DETAIL_TRANSACTION = `SELECT 
-                                        t.invoice_number, t.total_price, ts.status AS status_type, ts.id AS status_code, 
-                                        t.date_transfer, u.fullname, tq.total_quantity, t.created_at, t.updated_at
+                                        t.invoice_number, t.total_price, ts.status AS status_type, ts.id AS status_code,
+                                        t.receipt_transfer, t.date_transfer, u.fullname, tq.total_quantity, 
+                                        t.created_at, t.updated_at
                                     FROM 
                                         transaction AS t, transaction_status AS ts, 
                                         cart AS c, user AS u, 
