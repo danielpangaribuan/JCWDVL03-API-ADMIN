@@ -3,31 +3,36 @@ const utils = require('../utils')
 
 const getAllProducts = async (req, res) => {
     try {
+        const {product_name, category_id} = req.query
+        const sorting = 'ORDER BY i.product_id ASC';
         // query for get all products data
-        const GET_PRODUCTS = `SELECT * FROM product;`
+        const GET_PRODUCTS = `SELECT 
+                                    p.id, 
+                                    p.product_name AS product_name,
+                                    p.description,
+                                    c.name AS category,
+                                    p.price AS price, 
+                                    pm.image AS image,
+                                    wh.warehouse_name AS warehouse, 
+                                    p.weight, 
+                                    i.quantity AS quantity
+                                FROM
+                                    product AS p,
+                                    product_image AS pm,
+                                    inventory AS i,
+                                    warehouse AS wh,
+                                    category AS c
+                                WHERE
+                                    p.id = pm.product_id
+                                    AND pm.status = 1
+                                    AND wh.id = i.warehouse_id
+                                    AND c.id = p.category_id
+                                    AND i.product_id = p.id
+                                    AND p.product_name LIKE '%${ product_name ? product_name : '' }%'
+                                    AND p.category_id = IFNULL(${ category_id ? category_id : null }, p.category_id)
+                                GROUP BY p.id, pm.image
+                                ${sorting}`
         const [ PRODUCTS ] = await database.execute(GET_PRODUCTS)
-        // `SELECT p.id, p.name, p.price,  p.date_input, 
-        //GROUP_CONCAT(CONCAT(c.id, ',',c.category) SEPARATOR ';') AS categories
-        //FROM product AS p
-        //JOIN product_category AS pc ON p.id = pc.product_id
-        //JOIN category As c ON c.id = pc.category_id
-        //GROUP BY p.id;`
-        
-
-        // revise data
-        //const DATA = PRODUCTS.map(product => {
-        //    return {
-        //        ...product,
-        //       categories : product.categories.split(';').map(value => {
-        //            const temp_value = value.split(',')
-        //            return {
-        //                id : Number(temp_value[0]),
-        //                category : temp_value[1]
-        //            }
-        //        })
-        //    }
-        //})
-
 
         // sent respond to client-side
         res.status(200).send(new utils.CreateRespond(
@@ -40,50 +45,28 @@ const getAllProducts = async (req, res) => {
         res.status(500).send({ error })
     }
 }
-                                      
-/*{const getProductById = async (req, res) => {
-    const id = Number(req.params.id)
+
+const getCategory = async (req, res) => {
     try {
-        // do query to get data
-        const GET_PRODUCT_BY_ID = `SELECT p.id, p.name, p.price, p.date_input, 
-        GROUP_CONCAT(CONCAT(c.id, ',',c.category) SEPARATOR ';') AS categories
-        FROM products AS p
-        JOIN product_category AS pc ON p.id = pc.product_id
-        JOIN category As c ON c.id = pc.category_id
-        WHERE p.id = ?
-        GROUP BY p.id;`
-        const [ PRODUCT ] = await database.execute(GET_PRODUCT_BY_ID, [id])
+        const GET_CATEGORY = `SELECT * FROM db_warehouse.category;`
+        const [ get_category ] = await database.execute(GET_CATEGORY);
 
-        if (!PRODUCT.length) throw ({ message : `product with id : ${id} doesn't found` })
-
-        // revise data
-        const DATA = PRODUCT[0]
-        DATA.categories = DATA.categories.split(';').map(value => {
-            const temp_value = value.split(',')
-            return {
-                id : Number(temp_value[0]),
-                category : temp_value[1]
-            }
-        })
-
-        // send respond to client-side
         res.status(200).send(new utils.CreateRespond(
             200,
-            'single data',
-            PRODUCT[0]
+            'success',
+            get_category
         ))
     } catch (error) {
         console.log(error)
-        res.status(500).send({ error })
-    }
-}}*/
-
+    } 
+}
+                                      
 const addNewProduct = async (req, res) => {
-    const { product_name, category_id, weight, description, price } = req.body
+    const { product_name, category, weight, description, price, warehouse, quantity } = req.body
 
     try {
-        const ADD_PRODUCT = `INSERT INTO product (product_name, category_id, weight, description, price) VALUES(?, ?, ?, ?, ?)`
-        const [ NEW_PRODUCT ] = await database.execute(ADD_PRODUCT, [product_name, category_id, weight, description, price])
+        const ADD_PRODUCT = `INSERT INTO product (product_name, category, weight, description, price, warehouse, quantity) VALUES(?, ?, ?, ?, ?, ?, ?)`
+        const [ NEW_PRODUCT ] = await database.execute(ADD_PRODUCT, [product_name, category, weight, description, price, warehouse, quantity])
 
         res.status(200).send(new utils.CreateRespond(
             200,
@@ -159,10 +142,27 @@ const updateProducts = async (req, res) => {
     }
 }
 
+const getWarehouse = async ( req, res) => {
+    try {
+        const GET_WAREHOUSE = `SELECT * FROM warehouse;`
+        const [ get_warehouse ] = await database.execute(GET_WAREHOUSE);
+
+        res.status(200).send(new utils.CreateRespond(
+            200,
+            'success',
+            get_warehouse
+        ))
+    } catch (error) {
+        console.log(error)
+    }
+} 
+
 
 module.exports = {
     getAllProducts,
     addNewProduct,
     deleteProduct,
     updateProducts,
+    getCategory,
+    getWarehouse,
 }
