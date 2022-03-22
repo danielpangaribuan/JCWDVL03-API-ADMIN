@@ -3,7 +3,7 @@ const utils = require('../utils')
 
 const getAllProducts = async (req, res) => {
     try {
-        const {product_name, category_id} = req.query
+        const {product_name, category_id,} = req.query
         const sorting = 'ORDER BY i.product_id ASC';
         // query for get all products data
         const GET_PRODUCTS = `SELECT 
@@ -30,10 +30,11 @@ const getAllProducts = async (req, res) => {
                                     AND i.product_id = p.id
                                     AND p.product_name LIKE '%${ product_name ? product_name : '' }%'
                                     AND p.category_id = IFNULL(${ category_id ? category_id : null }, p.category_id)
-                                GROUP BY p.id, pm.image
-                                ${sorting}`
-        const [ PRODUCTS ] = await database.execute(GET_PRODUCTS)
+                                GROUP BY i.id ,p.id, pm.image
+                                ${sorting}`;
 
+                                
+        const [ PRODUCTS ] = await database.execute(GET_PRODUCTS)
         // sent respond to client-side
         res.status(200).send(new utils.CreateRespond(
             200,
